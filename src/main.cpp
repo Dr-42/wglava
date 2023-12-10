@@ -1,151 +1,18 @@
-#include <windows.h>
-#include <mmdeviceapi.h>
-#include <winnt.h>
-#include <stdio.h>
-#include <initguid.h>
-#include <system_error>
-#include <endpointvolume.h>
-#include <audioclient.h>
-
-IMMDeviceEnumerator* pEnumerator = NULL;
-WAVEFORMATEX* pwfx = NULL;
-IMMDevice* pDevice = NULL;
-IAudioClient* pAudioClient = NULL;
-IAudioCaptureClient* pCaptureClient = NULL;
-#define REFTIMES_PER_SEC  10000000
-#define REFTIMES_PER_MILLISEC  10000
-
-//float* data;
-BYTE* pData;
-DWORD flags;
-REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
-UINT32 bufferFrameCount;
-UINT32 numFramesAvailable;
-WORD wBitsPerSample;
-WORD wChannels;
-BOOL bDone = FALSE;
-
-void fatal_error(const char* fmt, ...) {
-	va_list args;
-	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
-	va_end(args);
-	exit(1);
-}
-#define SAFE_RELEASE(punk)  \
-if ((punk) != NULL)  \
-{ (punk)->Release(); (punk) = NULL; }
-
-void setup();
-void fill_buffer();
-void cleanup();
-
-void winfatal_error(HRESULT hr, const char* fmt, ...) {
-	if (FAILED(hr)) {
-		std::string message = std::system_category().message(hr);
-		va_list args;
-		va_start(args, fmt);
-		vfprintf(stderr, fmt, args);
-		va_end(args);
-		fprintf(stderr, "Error: %s\n", message.c_str());
-		cleanup();
-	}
-}
-
-void setup(UINT64* data_length){
-	HRESULT hr = CoInitialize(NULL);
-	winfatal_error(hr, "CoInitialize failed: hr = 0x%08x\n", hr);
-	hr = CoCreateInstance(
-		__uuidof(MMDeviceEnumerator), NULL,
-		CLSCTX_ALL,
-		__uuidof(IMMDeviceEnumerator),
-		(void**)&pEnumerator);
-	winfatal_error(hr, "CoCreateInstance failed: hr = 0x%08x\n", hr);
-
-	hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
-	winfatal_error(hr, "IMMDeviceEnumerator::GetDefaultAudioEndpoint failed: hr = 0x%08x\n", hr);
-	// Initialize the a capture stream on the default audio device.
-	LPWSTR name;
-	hr = pDevice->GetId(&name);
-	hr = pDevice->Activate(
-		IID_IAudioClient, CLSCTX_ALL,
-		NULL, (void**)&pAudioClient);
-	winfatal_error(hr, "IMMDevice::Activate failed: hr = 0x%08x\n", hr);
-
-	hr = pAudioClient->GetMixFormat(&pwfx);
-	winfatal_error(hr, "IAudioClient::GetMixFormat failed: hr = 0x%08x\n", hr);
-
-	hr = pAudioClient->Initialize(
-		AUDCLNT_SHAREMODE_SHARED,
-		AUDCLNT_STREAMFLAGS_LOOPBACK,
-		hnsRequestedDuration,
-		0,
-		pwfx,
-		NULL);
-
-	// Get the size of the allocated buffer.
-	hr = pAudioClient->GetBufferSize(&bufferFrameCount);
-
-	// Get a capture client
-	hr = pAudioClient->GetService(
-		IID_IAudioCaptureClient,
-		(void**)&pCaptureClient);
-	winfatal_error(hr, "IAudioClient::GetService failed: hr = 0x%08x\n", hr);
-
-	// Deduce the type of the PCM data
-	wBitsPerSample = pwfx->wBitsPerSample;
-	wChannels = pwfx->nChannels;
-
-	//REFERENCE_TIME hnsActualDuration = (double)REFTIMES_PER_SEC *
-		//bufferFrameCount / pwfx->nSamplesPerSec;
-
-	// Start recording
-	hr = pAudioClient->Start();
-	winfatal_error(hr, "IAudioClient::Start failed: hr = 0x%08x\n", hr);
-
-
-	*data_length = bufferFrameCount * wChannels;
-}
-
-void fill_buffer(float* data){
-	HRESULT hr = pCaptureClient->GetBuffer(
-		&pData,
-		&numFramesAvailable,
-		&flags, NULL, NULL);
-	winfatal_error(hr, "IAudioCaptureClient::GetBuffer failed: hr = 0x%08x\n", hr);
-	memcpy(data, pData, numFramesAvailable * wBitsPerSample / 8 * wChannels);
-	hr = pCaptureClient->ReleaseBuffer(numFramesAvailable);
-	UINT32 count = 0;
-	for (UINT32 i = 0; i < numFramesAvailable * wChannels; i++) {
-		float sample = data[i];
-		if (sample > 0.0001 || sample < -0.0001) {
-			count++;
-		}
-	}
-	if(count != 0) printf("Waves %d\n", count);
-	winfatal_error(hr, "IAudioCaptureClient::ReleaseBuffer failed: hr = 0x%08x\n", hr);
-	hr = pCaptureClient->GetNextPacketSize(&numFramesAvailable);
-	winfatal_error(hr, "IAudioCaptureClient::GetNextPacketSize failed: hr = 0x%08x\n", hr);
-}
-
-void cleanup(){
-	HRESULT hr = pAudioClient->Stop();  // Stop recording.
-	winfatal_error(hr, "IAudioClient::Stop failed: hr = 0x%08x\n", hr);
-	CoTaskMemFree(pwfx);
-	SAFE_RELEASE(pEnumerator)
-	SAFE_RELEASE(pDevice)
-	SAFE_RELEASE(pAudioClient)
-	SAFE_RELEASE(pCaptureClient)
-	CoUninitialize();
-}
+#include "audio_capture.h"
+#include <cstdint>
 
 int main() {
-	UINT64 data_length;
-	setup(&data_length);
-	float* data = (float*)malloc(data_length * sizeof(float));
+	auto ac = AudioCapture();
 	while (true) {
-		fill_buffer(data);
+		uint64_t num_frames = ac.fill_buffer();
+		UINT32 count = 0;
+		for (UINT32 i = 0; i < num_frames; i++) {
+			float sample = ac.get_data()[i];
+			if (sample > 0.0001 || sample < -0.0001) {
+				count++;
+			}
+		}
+		if(count != 0) printf("Waves %d\n", count);
 	}
-	cleanup();
 	return 0;
 }
