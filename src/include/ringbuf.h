@@ -9,6 +9,7 @@ public:
 	float Get(int index);
 	unsigned int GetSize();
 	unsigned int GetIndex();
+	float operator [](int index);
 private:
 	float* buf;
 	unsigned int size;

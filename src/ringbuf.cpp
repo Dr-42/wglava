@@ -3,6 +3,10 @@
 RingBuf::RingBuf(unsigned int size){
 	this->size = size;
 	this->buf = new float[size];
+	// Set all values to 0
+	for(unsigned int i = 0; i < size; i++){
+		this->buf[i] = 0;
+	}
 	this->index = 0;
 }
 
@@ -31,4 +35,8 @@ unsigned int RingBuf::GetSize(){
 
 unsigned int RingBuf::GetIndex(){
 	return this->index;
+}
+
+float RingBuf::operator [](int index){
+	return this->Get(index);
 }
