@@ -1,40 +1,19 @@
 #include "renderer.h"
 
 #include <GLFW/glfw3.h>
+#include <cmath>
 #include <cstdio>
 #include <string>
 #include <fstream>
-
-/*
-std::string vertexShaderSource = R"(
-#version 330 core
-layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec4 aColor;
-
-out vec4 color;
-void main(){
-        gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);
-        color = aColor;
-}
-)";
-
-std::string fragmentShaderSource = R"(
-#version 330 core
-out vec4 FragColor;
-
-in vec4 color;
-void main(){
-        FragColor = color;
-}
-)";
-*/
 
 Renderer::Renderer() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    window = glfwCreateWindow(800, 600, "Audio Visualizer", NULL, NULL);
+    auto monitor_width = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
+    auto monitor_height = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
+    window = glfwCreateWindow(monitor_width, monitor_height, "Audio Visualizer", NULL, NULL);
     glfwMakeContextCurrent(window);
 
     // Initialize GLEW
@@ -196,13 +175,20 @@ void Renderer::DrawRect(Rect rect, Color bcolor, Color tcolor) {
     // Create vertices
     mNumRects++;
     glBindVertexArray(VAO);
-    float vertices[] = {
+    /* float vertices[] = {
         rect.x, rect.y, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a,
         rect.x + rect.w, rect.y, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a,
         rect.x + rect.w, rect.y + rect.h, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a,
         rect.x, rect.y + rect.h, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a};
+*/
+    float cosRot = cos(rect.rot);
+    float sinRot = sin(rect.rot);
 
-    // Create indices
+    float vertices[] = {
+        rect.x, rect.y, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a,
+        rect.x + rect.w * cosRot, rect.y + rect.w * sinRot, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a,
+        rect.x + rect.w * cosRot - rect.h * sinRot, rect.y + rect.w * sinRot + rect.h * cosRot, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a,
+        rect.x - rect.h * sinRot, rect.y + rect.h * cosRot, bcolor.r, bcolor.g, bcolor.b, bcolor.a, tcolor.r, tcolor.g, tcolor.b, tcolor.a};
     unsigned int indices[] = {
         0 + mNumRects * 4, 1 + mNumRects * 4, 2 + mNumRects * 4,
         2 + mNumRects * 4, 3 + mNumRects * 4, 0 + mNumRects * 4};

@@ -2,6 +2,8 @@
 
 #include <complex>
 
+#define PI 3.14159265358979323846
+
 class RingBuf {
 public:
     RingBuf(unsigned int size);

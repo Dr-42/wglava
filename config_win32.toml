@@ -6,6 +6,6 @@ name = "main"
 src = "./src/"
 include_dir = "./src/include/"
 type = "exe"
-cflags = "-g -O3 -Wall -Wextra -std=c++17"
+cflags = "-g -Wall -Wextra -std=c++17"
 libs = "-lopengl32 -lglew32 -lglfw3 -lole32 -luuid -loleaut32"
 deps = [""]
