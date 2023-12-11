@@ -75,6 +75,11 @@ uint64_t AudioCapture::fill_buffer(){
 		&numFramesAvailable,
 		&flags, NULL, NULL);
 	winfatal_error(hr, "IAudioCaptureClient::GetBuffer failed: hr = 0x%08x\n", hr);
+	if (numFramesAvailable == 0) {
+		// Sleep for half the buffer duration.
+		Sleep((DWORD)(hnsRequestedDuration / REFTIMES_PER_MILLISEC / 50));
+		return 0;
+	}
 	memcpy(data, pData, numFramesAvailable * wBitsPerSample / 8 * wChannels);
 	hr = pCaptureClient->ReleaseBuffer(numFramesAvailable);
 	winfatal_error(hr, "IAudioCaptureClient::ReleaseBuffer failed: hr = 0x%08x\n", hr);

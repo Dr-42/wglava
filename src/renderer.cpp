@@ -127,9 +127,22 @@ void Renderer::Begin(){
 	glfwPollEvents();
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+	mNumRects = 0;
+	mVerts.clear();
+	mIndices.clear();
 }
 
 void Renderer::End(){
+	// Bind buffers
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, mVerts.size() * sizeof(float), mVerts.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * sizeof(unsigned int), mIndices.data(), GL_STATIC_DRAW);
+
+	// Draw
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0);
+
 	// Clear buffers
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -137,6 +150,7 @@ void Renderer::End(){
 
 void Renderer::DrawRect(Rect rect, Color color){
 	// Create vertices
+	mNumRects++;
 	glBindVertexArray(VAO);
 	float vertices[] = {
 		rect.x, rect.y, color.r, color.g, color.b, color.a,
@@ -147,18 +161,10 @@ void Renderer::DrawRect(Rect rect, Color color){
 
 	// Create indices
 	unsigned int indices[] = {
-		0, 1, 2,
-		2, 3, 0
+		0 + mNumRects * 4, 1 + mNumRects * 4, 2 + mNumRects * 4,
+		2 + mNumRects * 4, 3 + mNumRects * 4, 0 + mNumRects * 4
 	};
 
-	// Bind buffers
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-	// Set buffer data
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	// Draw
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	mVerts.insert(mVerts.end(), vertices, vertices + 24);
+	mIndices.insert(mIndices.end(), indices, indices + 6);
 }

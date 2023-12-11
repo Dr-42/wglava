@@ -14,7 +14,8 @@ public:
     float operator[](int index);
     void fft_analyze(float dt);
     float get_fft(int index);
-	size_t fft_size;
+    size_t fft_size;
+    float max_amp;
 private:
     float* buf;
     std::complex<float>* fft_buf;

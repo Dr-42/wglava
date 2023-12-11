@@ -6,7 +6,7 @@
 int main() {
     auto ac = AudioCapture();
     Renderer renderer = Renderer();
-    RingBuf rb = RingBuf(20000);
+    RingBuf rb = RingBuf(15000);
     while (!glfwWindowShouldClose(renderer.window)) {
         renderer.Begin();
         uint64_t num_frames = ac.fill_buffer();
@@ -15,12 +15,13 @@ int main() {
         for (UINT32 i = 0; i < rb.fft_size; i++) {
             float sample = rb.get_fft(i);
             float x = ((float)i / (float)rb.fft_size) * 2.0f - 1.0f;
-            float y = -0.5f;
+            float y = -0.99f;
             float w = 1.0f / (float)rb.fft_size;
             Rect rect = {x, y, w, sample, 0.0f};
             Color color = {1.0f, 0.0f, 1.0f, 1.0f};
             renderer.DrawRect(rect, color);
         }
+        renderer.End();
     }
     return 0;
 }

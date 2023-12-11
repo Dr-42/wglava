@@ -2,6 +2,8 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <cstdint>
+#include <vector>
 
 struct Rect{
 	float x, y, w, h, rot;
@@ -25,5 +27,8 @@ private:
 	unsigned int VAO;
 	unsigned int VBO;
 	unsigned int EBO;
+	std::vector<float> mVerts;
+	std::vector<unsigned int> mIndices;
+	uint32_t mNumRects;
 };
 
