@@ -13,8 +13,8 @@ int main() {
     float dt = 0.0f;
     float monitor_width = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
     float monitor_height = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
-    float center_x = 0.0f;//monitor_width / 2.0f;
-    float center_y = 580.0f;//monitor_height / 2.0f;
+    float center_x = 0.0f;
+    float center_y = 580.0f;
     float radius = 400.0f;
     while (!glfwWindowShouldClose(renderer.window)) {
         float time = glfwGetTime();
@@ -30,16 +30,6 @@ int main() {
         uint64_t num_frames = ac.fill_buffer();
         rb.Cat(ac.get_data(), num_frames);
         rb.fft_analyze(dt);
-        /* for (UINT32 i = 0; i < rb.fft_size; i++) {
-            float sample = rb.get_fft(i);
-            float x = ((float)i / (float)rb.fft_size) * 2.0f - 1.0f;
-            float y = -0.99f;
-            float w = 1.0f / (float)rb.fft_size;
-            Rect rect = {x, y, w, 2 * sample, 0.0f};
-            Color bcolor = {0.0f, 1.0f, 1.0f, 1.0f};
-            Color tcolor = {1.0f, 0.0f, 1.0f, 1.0f};
-            renderer.DrawRect(rect, bcolor, tcolor);
-        } */
         for (UINT32 i = 0; i < rb.fft_size; i++) {
             float sample = rb.get_fft(rb.fft_size - i - 1);
             float sample_angle = (((float)i / (float)rb.fft_size) * 2.0f * PI) + PI;
