@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <cstdint>
 
-#define FPS 30
+#define FPS 120
 
 int main() {
     auto ac = AudioCapture();
@@ -14,7 +14,7 @@ int main() {
     float monitor_width = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
     float monitor_height = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
     float center_x = 0.0f;//monitor_width / 2.0f;
-    float center_y = 600.0f;//monitor_height / 2.0f;
+    float center_y = 580.0f;//monitor_height / 2.0f;
     float radius = 400.0f;
     while (!glfwWindowShouldClose(renderer.window)) {
         float time = glfwGetTime();

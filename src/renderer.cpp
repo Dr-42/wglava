@@ -1,11 +1,15 @@
 #include "renderer.h"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+#include <windows.h>
 #include <cmath>
 #include <cstdio>
 #include <string>
 #include <fstream>
 
+void hide_taskbar_icon(GLFWwindow* window);
 Renderer::Renderer() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -14,15 +18,15 @@ Renderer::Renderer() {
     glfwWindowHint(GLFW_RESIZABLE, false);
     glfwWindowHint(GLFW_DECORATED, false);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, true);
-    glfwWindowHint(GLFW_FOCUSED, false);
-    glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
     auto monitor_width = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
     auto monitor_height = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
     window = glfwCreateWindow(monitor_height, monitor_height, "Audio Visualizer", nullptr, nullptr);
-    glfwMakeContextCurrent(window);
     glfwSetWindowPos(window, (monitor_width - monitor_height) / 2, 0);
+    glfwMakeContextCurrent(window);
+    hide_taskbar_icon(window);
 
     // Initialize GLEW
     glewExperimental = GL_TRUE;
@@ -206,4 +210,11 @@ void Renderer::DrawRect(Rect rect, Color bcolor, Color tcolor) {
     // Append vertices and indices
     mVerts.insert(mVerts.end(), vertices, vertices + ARR_LEN(vertices));
     mIndices.insert(mIndices.end(), indices, indices + ARR_LEN(indices));
+}
+
+void hide_taskbar_icon(GLFWwindow* win) {
+    FreeConsole();
+    glfwHideWindow(win);
+    SetWindowLong(glfwGetWin32Window(win), GWL_EXSTYLE, WS_EX_TOOLWINDOW);
+    glfwShowWindow(win);
 }
