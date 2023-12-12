@@ -38,6 +38,12 @@ AudioCapture::AudioCapture(){
 		NULL, (void**)&pAudioClient);
 	winfatal_error(hr, "IMMDevice::Activate failed: hr = 0x%08x\n", hr);
 
+	// Volume
+	hr = pDevice->Activate(
+		IID_IAudioEndpointVolume, CLSCTX_ALL, NULL,
+		(void**)&pEndpointVolume);
+	winfatal_error(hr, "IAudioClient::GetService failed: hr = 0x%08x\n", hr);
+
 	hr = pAudioClient->GetMixFormat(&pwfx);
 	winfatal_error(hr, "IAudioClient::GetMixFormat failed: hr = 0x%08x\n", hr);
 
@@ -74,12 +80,15 @@ uint64_t AudioCapture::fill_buffer(){
 		&pData,
 		&numFramesAvailable,
 		&flags, NULL, NULL);
-	winfatal_error(hr, "IAudioCaptureClient::GetBuffer failed: hr = 0x%08x\n", hr);
+
 	if (numFramesAvailable == 0) {
 		// Sleep for half the buffer duration.
 		Sleep((DWORD)(hnsRequestedDuration / REFTIMES_PER_MILLISEC / 50));
 		return 0;
 	}
+	// Get the volume
+	winfatal_error(hr, "IAudioCaptureClient::GetBuffer failed: hr = 0x%08x\n", hr);
+	hr = pEndpointVolume->GetMasterVolumeLevelScalar(&volume);
 	memcpy(data, pData, numFramesAvailable * wBitsPerSample / 8 * wChannels);
 	hr = pCaptureClient->ReleaseBuffer(numFramesAvailable);
 	winfatal_error(hr, "IAudioCaptureClient::ReleaseBuffer failed: hr = 0x%08x\n", hr);

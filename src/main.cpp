@@ -16,8 +16,10 @@ int main() {
     float center_x = 0.0f;
     float center_y = 580.0f;
     float radius = 400.0f;
+    float volume;
     while (!glfwWindowShouldClose(renderer.window)) {
         float time = glfwGetTime();
+        volume = ac.volume;
         glfwPollEvents();
         if (glfwGetKey(renderer.window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(renderer.window, true);
@@ -29,7 +31,7 @@ int main() {
         renderer.Begin();
         uint64_t num_frames = ac.fill_buffer();
         rb.Cat(ac.get_data(), num_frames);
-        rb.fft_analyze(dt);
+        rb.fft_analyze(40, dt);
         for (UINT32 i = 0; i < rb.fft_size; i++) {
             float sample = rb.get_fft(rb.fft_size - i - 1);
             float sample_angle = (((float)i / (float)rb.fft_size) * 2.0f * PI) + PI;
@@ -38,7 +40,7 @@ int main() {
             float w = 1.0f / (float)rb.fft_size;
             float angular_width = 2 * PI / (float)rb.fft_size;
             float rect_angle = sample_angle/2 - PI/2 - angular_width/2;
-            float h = radius * sample/sqrt(monitor_width * monitor_width);
+            float h = volume * radius * sample/sqrt(monitor_width * monitor_width);
             Rect rect = {x, y, w, h, rect_angle};
             Rect rect2 = {-x, y, w, h, -(rect_angle)};
             Color bcolor = {0.0f, 1.0f, 1.0f, 1.0f};

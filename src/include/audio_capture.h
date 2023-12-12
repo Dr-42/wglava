@@ -23,6 +23,7 @@ public:
 	~AudioCapture();
 	uint64_t fill_buffer();
 	float* get_data();
+	float volume;
 private:
 	uint64_t data_length;
 	float* data;
@@ -32,6 +33,7 @@ private:
 	IAudioClient* pAudioClient = NULL;
 	IAudioCaptureClient* pCaptureClient = NULL;
 	BYTE* pData;
+	IAudioEndpointVolume* pEndpointVolume = NULL;
 	DWORD flags;
 	REFERENCE_TIME hnsRequestedDuration = REFTIMES_PER_SEC;
 	UINT32 bufferFrameCount;

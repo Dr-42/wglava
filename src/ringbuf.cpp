@@ -1,6 +1,7 @@
 #include "ringbuf.h"
 
 #include <cmath>
+#include <cstdint>
 
 
 RingBuf::RingBuf(unsigned int size) {
@@ -68,7 +69,7 @@ std::complex<float> subcc(std::complex<float> a, std::complex<float> b) {
 	};
 }
 
-void RingBuf::fft_analyze(float dt) {
+void RingBuf::fft_analyze(uint32_t factor, float dt) {
     // Apply the Hann Window on the Input - https://en.wikipedia.org/wiki/Hann_function
     for (size_t i = 0; i < this->size; ++i) {
         float t = static_cast<float>(i) / (this->size - 1);
@@ -84,10 +85,10 @@ void RingBuf::fft_analyze(float dt) {
     float lowf = 1.0f;
     size_t m = 0;
     float max_amp = 1.0f;
-    for (float f = lowf; static_cast<size_t>(f) < this->size / 2; f = std::ceil(f * step)) {
+    for (float f = lowf; static_cast<size_t>(f) < this->size / factor; f = std::ceil(f * step)) {
         float f1 = std::ceil(f * step);
         float a = 0.0f;
-        for (size_t q = static_cast<size_t>(f); q < this->size / 2 && q < static_cast<size_t>(f1); ++q) {
+        for (size_t q = static_cast<size_t>(f); q < this->size / factor && q < static_cast<size_t>(f1); ++q) {
             float b = std::abs(this->fft_buf[q]);
             if (b > a) a = b;
         }

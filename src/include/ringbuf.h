@@ -1,6 +1,7 @@
 #pragma once
 
 #include <complex>
+#include <cstdint>
 
 #define PI 3.14159265358979323846
 
@@ -14,7 +15,8 @@ public:
     unsigned int GetSize();
     unsigned int GetIndex();
     float operator[](int index);
-    void fft_analyze(float dt);
+	// Larger facter = lower fft_size
+    void fft_analyze(uint32_t factor, float dt);
     float get_fft(int index);
     size_t fft_size;
     float max_amp;
